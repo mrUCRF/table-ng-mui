@@ -1,26 +1,46 @@
-import React from 'react';
-import logo from './logo.svg';
+
 import './App.css';
+import PopupTableWindow from './PopupTableWindow/PopupTableWindow';
+import MainTable from './Table/Table';
+import { Routes, Route } from 'react-router-dom'
+import React, { useCallback } from 'react';
+import { BrowserRouter} from 'react-router-dom'
+
+import testData from './data/testData';
+import { cloneDeep, set } from 'lodash';
+import useTableData from './hooks/useTableData';
+
+
+
 
 function App() {
+  window.localStorage.clear()
+  const [tableData, setTableData] = useTableData("tableData", testData);
+  const changeTableValue = useCallback((id: any, value: any) => {
+      const path = (String(id + ".value"));
+      setTableData((prevData: any) => {
+        const newTable = cloneDeep(prevData);
+        set(newTable, path, value);
+        // console.log({ newTable });
+        return newTable;
+      });
+
+    },
+    [setTableData]
+  );
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <TableCopyContext.Provider value={[tableData, changeTableValue]}>
+    <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<MainTable />} />
+        <Route path='/popup/:path' element={<PopupTableWindow />} />
+      </Routes>
+      </BrowserRouter>
+      </TableCopyContext.Provider>
+
   );
 }
-
+export const TableCopyContext = React.createContext([{}, () => {}]);
 export default App;
+
+
